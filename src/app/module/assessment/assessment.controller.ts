@@ -120,6 +120,8 @@ const removeQuestionFromAssessment = catchAsync(
 			user,
 		);
 
+		console.log(result)
+
 		sendResponse(res, {
 			statusCode: httpStatus.OK,
 			success: true,
