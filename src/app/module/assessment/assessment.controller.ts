@@ -112,6 +112,7 @@ const addQuestionsToAssessment = catchAsync(
 const removeQuestionFromAssessment = catchAsync(
 	async (req: Request, res: Response) => {
 		const id = req.params.id as string;
+		console.log(id)
 		const questionId = req.params.questionId as string;
 		const user = { userId: req.user!.userId, role: req.user!.role };
 		const result = await AssessmentService.removeQuestionFromAssessment(
