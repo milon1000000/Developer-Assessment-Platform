@@ -17,6 +17,7 @@ import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import { notFound } from "./app/middleware/notFound";
 
 import { AuthRoutes } from "./app/module/auth/auth.route";
+import { AssessmentRoutes } from "./app/module/assessment/assessment.route";
 import { GlobalQuestionRoutes } from "./app/module/globalQuestion/globalQuestion.route";
 // import { UserRouters } from "./app/module/user/user.route";
 
@@ -38,6 +39,7 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 app.use("/api/v1/auth", AuthRoutes);
+app.use("/api/v1/assessments", AssessmentRoutes);
 app.use("/api/v1/global-questions", GlobalQuestionRoutes);
 
 // app.use("/api/v1/user", UserRouters);
