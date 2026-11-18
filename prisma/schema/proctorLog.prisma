@@ -1,0 +1,10 @@
+model ProctorLog {
+  id           String           @id @default(uuid())
+  submissionId String
+  submission   Submission       @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  eventType    ProctorEventType
+  details      String?
+  createdAt    DateTime         @default(now())
+
+  @@index([submissionId])
+}

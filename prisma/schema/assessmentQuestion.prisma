@@ -1,0 +1,30 @@
+model AssessmentQuestion {
+  id           String     @id @default(uuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  globalQuestionId String?
+  globalQuestion   GlobalQuestion? @relation(fields: [globalQuestionId], references: [id], onDelete: SetNull)
+
+  title            String
+  type             QuestionType @default(CODING)
+  difficulty       Difficulty   @default(EASY)
+  problemStatement String       @db.Text
+  constraints      String?      @db.Text
+
+  starterCode   Json?
+  testCases     Json?
+  mcqOptions    Json?
+  correctOption String?
+
+  points     Int @default(10)
+  orderIndex Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  answers Answer[]
+
+  @@index([assessmentId])
+  @@index([globalQuestionId])
+}

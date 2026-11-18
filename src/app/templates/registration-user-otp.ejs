@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email - Developer Assessment Platform</title>
+</head>
+
+<body style="
+  margin:0;
+  padding:0;
+  background-color:#0f172a;
+  font-family:Arial, Helvetica, sans-serif;
+">
+
+  <table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    style="background-color:#0f172a; padding:40px 15px;"
+  >
+    <tr>
+      <td align="center">
+
+        <!-- Main Container -->
+        <table
+          role="presentation"
+          width="100%"
+          cellpadding="0"
+          cellspacing="0"
+          border="0"
+          style="
+            max-width:540px;
+            background-color:#1e293b;
+            border-radius:12px;
+            overflow:hidden;
+            border:1px solid #334155;
+          "
+        >
+
+          <!-- Header -->
+          <tr>
+            <td
+              align="center"
+              style="
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                padding:32px 25px;
+              "
+            >
+              <div
+                style="
+                  color:#ffffff;
+                  font-size:24px;
+                  font-weight:700;
+                  letter-spacing:0.5px;
+                "
+              >
+                Developer Assessment Platform
+              </div>
+
+              <div
+                style="
+                  margin-top:8px;
+                  color:#bfdbfe;
+                  font-size:14px;
+                "
+              >
+                Assess, Showcase & Elevate Your Engineering Skills
+              </div>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:35px 35px 30px;">
+
+              <!-- Greeting -->
+              <p
+                style="
+                  margin:0 0 16px;
+                  color:#f8fafc;
+                  font-size:16px;
+                  line-height:1.6;
+                "
+              >
+                Hello <strong><%= name %></strong>,
+              </p>
+
+              <p
+                style="
+                  margin:0 0 20px;
+                  color:#94a3b8;
+                  font-size:15px;
+                  line-height:1.7;
+                "
+              >
+                Welcome to <strong>Developer Assessment Platform</strong>! To complete your developer registration and verify your email, please use the 6-digit verification code below:
+              </p>
+
+              <!-- OTP Section -->
+              <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="margin:25px 0;"
+              >
+                <tr>
+                  <td
+                    align="center"
+                    style="
+                      background-color:#0f172a;
+                      border:1px solid #3b82f6;
+                      border-radius:10px;
+                      padding:25px 15px;
+                    "
+                  >
+
+                    <div
+                      style="
+                        color:#94a3b8;
+                        font-size:13px;
+                        font-weight:600;
+                        text-transform:uppercase;
+                        letter-spacing:1px;
+                        margin-bottom:12px;
+                      "
+                    >
+                      Verification Code
+                    </div>
+
+                    <div
+                      style="
+                        color:#60a5fa;
+                        font-size:36px;
+                        font-weight:700;
+                        letter-spacing:10px;
+                        line-height:1.2;
+                        font-family: monospace;
+                      "
+                    >
+                      <%= otpValue %>
+                    </div>
+
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Expiration -->
+              <p
+                style="
+                  margin:0 0 20px;
+                  text-align:center;
+                  color:#94a3b8;
+                  font-size:13px;
+                  line-height:1.6;
+                "
+              >
+                This code is valid for <strong><%= expireMinites %> minutes</strong>.
+              </p>
+
+              <!-- Security Notice -->
+              <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="
+                  background-color:#0f172a;
+                  border:1px solid #334155;
+                  border-radius:8px;
+                  margin-top:20px;
+                "
+              >
+                <tr>
+                  <td style="padding:15px 18px;">
+                    <p
+                      style="
+                        margin:0;
+                        color:#94a3b8;
+                        font-size:13px;
+                        line-height:1.6;
+                      "
+                    >
+                      <strong style="color:#e2e8f0;">Security note:</strong>
+                      Never share this code with anyone. Our team will never ask for your password or verification code.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p
+                style="
+                  margin:25px 0 0;
+                  color:#94a3b8;
+                  font-size:13px;
+                  line-height:1.6;
+                "
+              >
+                If you did not sign up for an account, you can safely ignore this email.
+              </p>
+
+              <p
+                style="
+                  margin:25px 0 0;
+                  color:#f8fafc;
+                  font-size:14px;
+                  line-height:1.6;
+                "
+              >
+                Best regards,<br>
+                <strong>Developer Assessment Team</strong>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td
+              align="center"
+              style="
+                background-color:#0f172a;
+                border-top:1px solid #334155;
+                padding:20px 25px;
+              "
+            >
+              <p
+                style="
+                  margin:0;
+                  color:#64748b;
+                  font-size:12px;
+                  line-height:1.5;
+                "
+              >
+                © <%= new Date().getFullYear() %> Developer Assessment Platform. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

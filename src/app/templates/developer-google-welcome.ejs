@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome - Developer Assessment Platform</title>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #333333;
+    "
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #0f172a; padding: 40px 15px"
+    >
+      <tr>
+        <td align="center">
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              max-width: 600px;
+              width: 100%;
+              background-color: #1e293b;
+              border-radius: 12px;
+              overflow: hidden;
+              border: 1px solid #334155;
+            "
+          >
+            <tr>
+              <td
+                align="center"
+                style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 32px 20px"
+              >
+                <h1
+                  style="
+                    margin: 0;
+                    color: #ffffff;
+                    font-size: 26px;
+                    font-weight: 700;
+                  "
+                >
+                  Developer Assessment Platform
+                </h1>
+                <p style="margin: 8px 0 0; color: #bfdbfe; font-size: 14px">
+                  Signed In with Google
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 35px 30px">
+                <p style="font-size: 16px; margin: 0 0 15px; color: #f8fafc">
+                  Hello <strong><%= name %></strong>,
+                </p>
+                <p
+                  style="
+                    font-size: 15px;
+                    line-height: 1.6;
+                    color: #94a3b8;
+                    margin: 0 0 20px;
+                  "
+                >
+                  You have successfully connected your Google account to Developer Assessment Platform. You can now access assessments and technical evaluations.
+                </p>
+                <p style="font-size: 15px; color: #f8fafc; margin: 25px 0 0">
+                  Best regards,<br />
+                  <strong>Developer Assessment Platform Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                align="center"
+                style="
+                  background-color: #0f172a;
+                  border-top: 1px solid #334155;
+                  padding: 20px;
+                  font-size: 12px;
+                  color: #64748b;
+                "
+              >
+                <p style="margin: 0">
+                  © <%= new Date().getFullYear() %> Developer Assessment Platform. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

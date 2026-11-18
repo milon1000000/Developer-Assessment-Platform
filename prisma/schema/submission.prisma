@@ -1,0 +1,35 @@
+model Submission {
+  id           String     @id @default(uuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+
+  developerId String
+  developer   Developer @relation(fields: [developerId], references: [id])
+
+  status     SubmissionStatus @default(IN_PROGRESS)
+  totalScore Float            @default(0)
+  maxScore   Float            @default(0)
+  percentage Float            @default(0)
+  isPassed   Boolean          @default(false)
+
+  // Anti-cheating & proctoring summary counters
+  tabSwitchCount Int     @default(0)
+  copyPasteCount Int     @default(0)
+  ipAddress      String?
+  userAgent      String?
+
+  startedAt        DateTime  @default(now())
+  submittedAt      DateTime?
+  timeSpentSeconds Int?
+
+  // Review & grading
+  feedback   String?   @db.Text
+  reviewedAt DateTime?
+
+  answers     Answer[]
+  proctorLogs ProctorLog[]
+
+  @@unique([assessmentId, developerId])
+  @@index([assessmentId, status])
+  @@index([developerId])
+}

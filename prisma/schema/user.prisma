@@ -1,0 +1,26 @@
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  password      String?
+  role          Role         @default(DEVELOPER)
+  status        UserStatus   @default(ACTIVE)
+  authProvider  AuthProvider @default(CREDENTIALS)
+  googleId      String?      @unique
+  emailVerified Boolean      @default(false)
+  isDeleted     Boolean      @default(false)
+  deletedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Role-specific One-to-One Profiles
+  adminProfile     Admin?
+  recruiterProfile Recruiter?
+  developerProfile Developer?
+
+  // Common Relations
+  auditLogs AuditLog[]
+
+  @@index([email])
+  @@index([role, status])
+}

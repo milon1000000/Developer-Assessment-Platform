@@ -1,0 +1,19 @@
+model Developer {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name            String
+  phone           String?
+  avatarUrl       String? 
+  skills          String[]
+  experienceYears Float?   @default(0)
+  githubUrl       String?
+  portfolioUrl    String?
+  resumeUrl       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions Submission[]
+}

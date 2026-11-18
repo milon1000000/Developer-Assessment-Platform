@@ -1,0 +1,48 @@
+enum Role {
+  ADMIN
+  RECRUITER
+  DEVELOPER
+}
+
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+  GITHUB
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+}
+
+enum QuestionType {
+  CODING
+  MCQ
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum SubmissionStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+  DISQUALIFIED
+}
+
+enum ProctorEventType {
+  TAB_SWITCH
+  COPY_PASTE
+  WINDOW_BLUR
+  FULLSCREEN_EXIT
+}
