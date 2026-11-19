@@ -10,6 +10,7 @@ import config from "../../config";
 import { prisma } from "../../lib/prisma";
 import { jwtUtils } from "../../utils/jwt";
 import type {
+	IChangePasswordPayload,
 	IForgotPasswordPayload,
 	ILoginUserPayload,
 	IRegisterDeveloperPayload,
@@ -754,6 +755,75 @@ const resetPassword = async (payload: any) => {
 	}
 };
 
+// 7.1. Change Password (For Logged In User)
+const changePassword = async (
+	userId: string,
+	payload: IChangePasswordPayload,
+) => {
+	const { oldPassword, newPassword } = payload;
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId, isDeleted: false },
+	});
+
+	if (!user) {
+		throw new AppError(httpStatus.NOT_FOUND, "User not found");
+	}
+
+	if (user.status === UserStatus.SUSPENDED) {
+		throw new AppError(httpStatus.FORBIDDEN, "Your account has been suspended");
+	}
+
+	if (
+		user.googleId &&
+		!user.password &&
+		user.authProvider === AuthProvider.GOOGLE
+	) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"This account was registered using Google. Password change is not supported.",
+		);
+	}
+
+	if (!user.password) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"No password set for this account.",
+		);
+	}
+
+	const isPasswordMatched = await bcrypt.compare(oldPassword, user.password);
+	if (!isPasswordMatched) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"Current/old password does not match",
+		);
+	}
+
+	if (oldPassword === newPassword) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"New password cannot be the same as your old password",
+		);
+	}
+
+	const hashedPassword = await bcrypt.hash(
+		newPassword,
+		Number(config.bcrypt_salt_rounds),
+	);
+
+	await prisma.user.update({
+		where: { id: userId },
+		data: {
+			password: hashedPassword,
+		},
+	});
+
+	return {
+		message: "Password changed successfully",
+	};
+};
+
 // 8. Get Me (Current Authenticated User)
 const getMe = async (userId: string) => {
 	const user = await prisma.user.findUnique({
@@ -920,6 +990,7 @@ export const AuthService = {
 	googleCallback,
 	forgotPassword,
 	resetPassword,
+	changePassword,
 	getMe,
 	updateDeveloperProfile,
 };

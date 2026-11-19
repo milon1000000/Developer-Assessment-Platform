@@ -70,6 +70,13 @@ router.post(
 	AuthController.resetPassword,
 );
 
+router.post(
+	"/change-password",
+	auth(),
+	validateRequest(UserValidation.ChangePasswordZodSchema),
+	AuthController.changePassword,
+);
+
 router.post("/logout", AuthController.logout);
 
 export const AuthRoutes = router;

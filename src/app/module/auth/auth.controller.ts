@@ -229,6 +229,22 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const changePassword = catchAsync(async (req: Request, res: Response) => {
+	const userId = req.user?.userId;
+	if (!userId) {
+		throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized access");
+	}
+
+	const result = await AuthService.changePassword(userId, req.body);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: result.message,
+		data: null,
+	});
+});
+
 const getMe = catchAsync(async (req: Request, res: Response) => {
 	const userId = req.user?.userId;
 	if (!userId) {
@@ -292,6 +308,7 @@ export const AuthController = {
 	googleCallback,
 	forgotPassword,
 	resetPassword,
+	changePassword,
 	getMe,
 	updateProfile,
 	logout,

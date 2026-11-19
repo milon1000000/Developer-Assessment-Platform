@@ -100,6 +100,20 @@ const VerifyRecruiterEmailZodSchema = z.object({
 	otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
+const ChangePasswordZodSchema = z.object({
+	oldPassword: z.string().min(1, "Old password is required"),
+	newPassword: z
+		.string()
+		.min(8, "Password must be at least 8 characters long")
+		.regex(/[a-z]/, "Password must contain at least 1 lowercase letter")
+		.regex(/[A-Z]/, "Password must contain at least 1 uppercase letter")
+		.regex(/[0-9]/, "Password must contain at least 1 number")
+		.regex(
+			/[^A-Za-z0-9]/,
+			"Password must contain at least 1 special character",
+		),
+});
+
 export const UserValidation = {
 	DeveloperRegistrationZodSchema,
 	UpdateDeveloperProfileZodSchema,
@@ -107,6 +121,7 @@ export const UserValidation = {
 	RecruiterRegistrationZodSchema,
 	VerifyRecruiterEmailZodSchema,
 	LoginZodSchema,
+	ChangePasswordZodSchema,
 	ForgotZodSchema,
 	ResetZodSchema,
 };
