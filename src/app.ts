@@ -21,7 +21,8 @@ import { AssessmentRoutes } from "./app/module/assessment/assessment.route";
 import { AssessmentInviteRoutes } from "./app/module/AssessmentInvite/assessmentInvite.route";
 import { GlobalQuestionRoutes } from "./app/module/globalQuestion/globalQuestion.route";
 import { SubmissionRoutes } from "./app/module/submissions/submission.route";
-// import { UserRouters } from "./app/module/user/user.route";
+import { UserRoutes } from "./app/module/user/user.route";
+import { DashboardRoutes } from "./app/module/dashboard/dashboard.route";
 
 const app: Application = express();
 
@@ -46,7 +47,8 @@ app.use("/api/v1/assessment-invites", AssessmentInviteRoutes);
 app.use("/api/v1/submissions", SubmissionRoutes);
 app.use("/api/v1/global-questions", GlobalQuestionRoutes);
 
-// app.use("/api/v1/user", UserRouters);
+app.use("/api/v1/user", UserRoutes);
+app.use("/api/v1/dashboard", DashboardRoutes);
 
 app.get("/test", async (req: Request, res: Response, next: NextFunction) => {
 	try {
