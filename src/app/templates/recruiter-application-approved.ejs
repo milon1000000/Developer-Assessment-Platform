@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recruiter Application Approved - Developer Assessment Platform</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f8fafc;
+      padding: 40px 15px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    }
+    .header {
+      background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+      padding: 35px 24px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .badge-icon {
+      width: 60px;
+      height: 60px;
+      line-height: 60px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #16a34a;
+      font-size: 32px;
+      font-weight: bold;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 8px 0 0 0;
+      font-size: 14px;
+      color: #dcfce7;
+    }
+    .content {
+      padding: 32px 28px;
+    }
+    .greeting {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+    .text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 20px;
+    }
+    .status-badge {
+      display: inline-block;
+      background-color: #dcfce7;
+      color: #15803d;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 22px;
+      margin: 22px 0;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #334155;
+      margin-bottom: 14px;
+    }
+    .credential-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed #e2e8f0;
+      font-size: 14px;
+    }
+    .credential-row:last-child {
+      border-bottom: none;
+    }
+    .credential-label {
+      color: #64748b;
+      font-weight: 500;
+    }
+    .credential-val {
+      font-weight: 700;
+      color: #0f172a;
+      font-family: monospace;
+      font-size: 15px;
+    }
+    .btn-container {
+      text-align: center;
+      margin: 28px 0;
+    }
+    .btn {
+      display: inline-block;
+      background: #2563eb;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 13px 32px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+    }
+    .notice {
+      background-color: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #92400e;
+      line-height: 1.5;
+    }
+    .footer {
+      background-color: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <div class="badge-icon">✓</div>
+        <h1>Application Approved</h1>
+        <p>Developer Assessment Platform</p>
+      </div>
+      
+      <div class="content">
+        <div class="greeting">Congratulations, <%= name %>!</div>
+        <div class="status-badge">✓ ACCOUNT ACTIVE</div>
+        
+        <div class="text">
+          We are delighted to inform you that your recruiter application for <strong><%= companyName %></strong> has been reviewed and <strong style="color: #16a34a;">approved</strong> by our administrative team.
+        </div>
+
+        <div class="text">
+          Your recruiter account is now active. You can start creating assessments, selecting questions, and sending candidate invitations right away.
+        </div>
+
+        <!-- Login Credentials Card -->
+        <div class="card">
+          <div class="card-title">🔐 Your Login Credentials</div>
+          <table width="100%" cellpadding="6" cellspacing="0" border="0">
+            <tr>
+              <td width="30%" style="color: #64748b; font-size: 14px; font-weight: 500;">Email:</td>
+              <td style="color: #0f172a; font-size: 14px; font-weight: 700;"><%= email %></td>
+            </tr>
+            <tr>
+              <td width="30%" style="color: #64748b; font-size: 14px; font-weight: 500;">Password:</td>
+              <td style="color: #0f172a; font-size: 15px; font-weight: 800; font-family: monospace; background: #e2e8f0; padding: 4px 8px; border-radius: 4px;"><%= password %></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="notice">
+          ⚠️ <strong>Security Recommendation:</strong> Please log in using the temporary password above and immediately change your password from your account settings.
+        </div>
+
+        <div class="btn-container">
+          <a href="<%= loginUrl %>" class="btn">Login to Recruiter Dashboard</a>
+        </div>
+      </div>
+
+      <div class="footer">
+        © <%= new Date().getFullYear() %> Developer Assessment Platform. All rights reserved.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

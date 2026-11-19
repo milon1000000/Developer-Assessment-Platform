@@ -22,8 +22,13 @@ const ChangeUserStatusZodSchema = z.object({
 	status: z.enum(["ACTIVE", "PENDING", "SUSPENDED"]),
 });
 
+const RejectRecruiterZodSchema = z.object({
+	rejectionReason: z.string().optional(),
+});
+
 export const UserValidation = {
 	UpdateRecruiterProfileZodSchema,
 	UpdateAdminProfileZodSchema,
 	ChangeUserStatusZodSchema,
+	RejectRecruiterZodSchema,
 };

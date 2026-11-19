@@ -37,6 +37,26 @@ router.patch(
 // Admin user management endpoints
 router.get("/all-users", auth(Role.ADMIN), UserController.getAllUsers);
 
+// Admin recruiter application review endpoints
+router.get(
+	"/recruiter-applications",
+	auth(Role.ADMIN),
+	UserController.getPendingRecruiterApplications,
+);
+
+router.patch(
+	"/recruiter-application/:id/approve",
+	auth(Role.ADMIN),
+	UserController.approveRecruiterApplication,
+);
+
+router.patch(
+	"/recruiter-application/:id/reject",
+	auth(Role.ADMIN),
+	validateRequest(UserValidation.RejectRecruiterZodSchema),
+	UserController.rejectRecruiterApplication,
+);
+
 router.get("/:id", auth(Role.ADMIN), UserController.getUserById);
 
 router.patch(

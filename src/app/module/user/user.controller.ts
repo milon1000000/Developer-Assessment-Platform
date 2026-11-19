@@ -110,6 +110,49 @@ const deleteUser = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const getPendingRecruiterApplications = catchAsync(
+	async (req: Request, res: Response) => {
+		const query = req.query;
+		const result = await UserService.getPendingRecruiterApplications(query);
+
+		sendResponse(res, {
+			statusCode: httpStatus.OK,
+			success: true,
+			message: "Pending recruiter applications retrieved successfully",
+			meta: result.meta,
+			data: result.data,
+		});
+	},
+);
+
+const approveRecruiterApplication = catchAsync(
+	async (req: Request, res: Response) => {
+		const id = req.params.id as string;
+		const result = await UserService.approveRecruiterApplication(id);
+
+		sendResponse(res, {
+			statusCode: httpStatus.OK,
+			success: true,
+			message: result.message,
+			data: result,
+		});
+	},
+);
+
+const rejectRecruiterApplication = catchAsync(
+	async (req: Request, res: Response) => {
+		const id = req.params.id as string;
+		const result = await UserService.rejectRecruiterApplication(id, req.body);
+
+		sendResponse(res, {
+			statusCode: httpStatus.OK,
+			success: true,
+			message: result.message,
+			data: null,
+		});
+	},
+);
+
 export const UserController = {
 	getRecruiterProfile,
 	updateRecruiterProfile,
@@ -119,4 +162,7 @@ export const UserController = {
 	getUserById,
 	changeUserStatus,
 	deleteUser,
+	getPendingRecruiterApplications,
+	approveRecruiterApplication,
+	rejectRecruiterApplication,
 };

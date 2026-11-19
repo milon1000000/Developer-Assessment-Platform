@@ -45,7 +45,16 @@ const VerifyEmailZodSchema = z.object({
 
 const LoginZodSchema = z.object({
 	email: z.string().email("Invalid email format"),
-	password: z.string().min(1, "Password is required"),
+	password: z
+		.string()
+		.min(8, "Password must be at least 8 characters long")
+		.regex(/[a-z]/, "Password must contain at least 1 lowercase letter")
+		.regex(/[A-Z]/, "Password must contain at least 1 uppercase letter")
+		.regex(/[0-9]/, "Password must contain at least 1 number")
+		.regex(
+			/[^A-Za-z0-9]/,
+			"Password must contain at least 1 special character",
+		),
 });
 
 const ForgotZodSchema = z.object({
@@ -67,10 +76,36 @@ const ResetZodSchema = z.object({
 	otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
+const RecruiterRegistrationZodSchema = z.object({
+	name: z
+		.string()
+		.min(2, "Name must be at least 2 characters long")
+		.max(60, "Name cannot exceed 60 characters"),
+	email: z.string().email("Invalid email format"),
+	companyName: z
+		.string()
+		.min(2, "Company name must be at least 2 characters long")
+		.max(100, "Company name cannot exceed 100 characters"),
+	companyWebsite: z
+		.string()
+		.url("Invalid company website URL")
+		.optional()
+		.nullable(),
+	designation: z.string().optional().nullable(),
+	phone: z.string().optional().nullable(),
+});
+
+const VerifyRecruiterEmailZodSchema = z.object({
+	email: z.string().email("Invalid email format"),
+	otp: z.string().length(6, "OTP must be 6 digits"),
+});
+
 export const UserValidation = {
 	DeveloperRegistrationZodSchema,
 	UpdateDeveloperProfileZodSchema,
 	VerifyEmailZodSchema,
+	RecruiterRegistrationZodSchema,
+	VerifyRecruiterEmailZodSchema,
 	LoginZodSchema,
 	ForgotZodSchema,
 	ResetZodSchema,

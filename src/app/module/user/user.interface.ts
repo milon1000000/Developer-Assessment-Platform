@@ -25,6 +25,10 @@ export interface IChangeUserStatusPayload {
 	status: UserStatus;
 }
 
+export interface IRejectRecruiterPayload {
+	rejectionReason?: string;
+}
+
 export interface IUserFilterableFields {
 	searchTerm?: string;
 	role?: Role;

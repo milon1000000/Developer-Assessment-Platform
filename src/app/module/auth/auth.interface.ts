@@ -33,6 +33,20 @@ export interface IVerifyEmailPayload {
 	otp: string;
 }
 
+export interface IRegisterRecruiterPayload {
+	name: string;
+	email: string;
+	companyName: string;
+	companyWebsite?: string | null;
+	designation?: string | null;
+	phone?: string | null;
+}
+
+export interface IVerifyRecruiterEmailPayload {
+	email: string;
+	otp: string;
+}
+
 export interface IGoogleLoginPayload {
 	idToken: string;
 }

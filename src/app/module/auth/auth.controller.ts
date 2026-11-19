@@ -57,6 +57,32 @@ const verifyDeveloperEmail = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const registerRecruiter = catchAsync(async (req: Request, res: Response) => {
+	const payload = req.body;
+
+	const result = await AuthService.registerRecruiter(payload);
+
+	sendResponse(res, {
+		statusCode: httpStatus.CREATED,
+		success: true,
+		message: result.message,
+		data: null,
+	});
+});
+
+const verifyRecruiterEmail = catchAsync(async (req: Request, res: Response) => {
+	const payload = req.body;
+
+	const result = await AuthService.verifyRecruiterEmail(payload);
+
+	sendResponse(res, {
+		statusCode: httpStatus.CREATED,
+		success: true,
+		message: result.message,
+		data: result,
+	});
+});
+
 const loginUser = catchAsync(async (req: Request, res: Response) => {
 	const payload = req.body;
 	const result = await AuthService.loginUser(payload);
@@ -259,6 +285,8 @@ const logout = catchAsync(async (req: Request, res: Response) => {
 export const AuthController = {
 	registerDeveloper,
 	verifyDeveloperEmail,
+	registerRecruiter,
+	verifyRecruiterEmail,
 	loginUser,
 	refreshToken,
 	googleCallback,

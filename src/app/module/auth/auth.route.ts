@@ -22,6 +22,18 @@ router.post(
 );
 
 router.post(
+	"/register-recruiter",
+	validateRequest(UserValidation.RecruiterRegistrationZodSchema),
+	AuthController.registerRecruiter,
+);
+
+router.post(
+	"/verify-recruiter-email",
+	validateRequest(UserValidation.VerifyRecruiterEmailZodSchema),
+	AuthController.verifyRecruiterEmail,
+);
+
+router.post(
 	"/login",
 	validateRequest(UserValidation.LoginZodSchema),
 	AuthController.loginUser,

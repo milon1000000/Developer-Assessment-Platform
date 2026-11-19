@@ -13,8 +13,10 @@ import type {
 	IForgotPasswordPayload,
 	ILoginUserPayload,
 	IRegisterDeveloperPayload,
+	IRegisterRecruiterPayload,
 	IUpdateDeveloperProfilePayload,
 	IVerifyEmailPayload,
+	IVerifyRecruiterEmailPayload,
 } from "./auth.interface";
 import crypto from "crypto";
 import { redisClient } from "../../lib/redis";
@@ -232,6 +234,162 @@ const verifyDeveloperEmail = async (payload: IVerifyEmailPayload) => {
 	};
 };
 
+// 2.1. Register Recruiter (Stores in Redis and sends Verification OTP)
+const registerRecruiter = async (payload: IRegisterRecruiterPayload) => {
+	const email = payload.email.trim().toLowerCase();
+	const name = payload.name.trim();
+
+	const isUserExists = await prisma.user.findUnique({
+		where: { email },
+	});
+
+	if (isUserExists) {
+		throw new AppError(
+			httpStatus.CONFLICT,
+			"User with this email already exists",
+		);
+	}
+
+	const otpKey = `recruiter-registration-otp:${email}`;
+	const expirationSeconds = 15 * 60; // 15 minutes
+	const otpValue = crypto.randomInt(100000, 900000).toString();
+
+	await redisClient.set(otpKey, otpValue, {
+		expiration: {
+			type: "EX",
+			value: expirationSeconds,
+		},
+	});
+
+	const registrationKey = `recruiter-registration-data:${email}`;
+	const redisPayloadData = {
+		name,
+		email,
+		companyName: payload.companyName.trim(),
+		companyWebsite: payload.companyWebsite || null,
+		designation: payload.designation || null,
+		phone: payload.phone || null,
+	};
+
+	await redisClient.set(registrationKey, JSON.stringify(redisPayloadData), {
+		expiration: {
+			type: "EX",
+			value: expirationSeconds,
+		},
+	});
+
+	const templatePath = path.join(
+		process.cwd(),
+		"src/app/templates/recruiter-registration-otp.ejs",
+	);
+
+	try {
+		const templateData = {
+			name,
+			companyName: payload.companyName,
+			otpValue,
+			expireMinutes: expirationSeconds / 60,
+		};
+
+		const html = await ejs.renderFile(templatePath, templateData);
+
+		await transporter.sendMail({
+			from: config.email_sender,
+			to: email,
+			subject: "Verify Your Email - Recruiter Application",
+			html,
+		});
+	} catch (mailError) {
+		console.error("Error sending recruiter registration OTP email:", mailError);
+	}
+
+	return {
+		message:
+			"Verification OTP has been sent to your email. Please verify within 15 minutes.",
+	};
+};
+
+// 2.2. Verify Recruiter Email & Save to DB with PENDING status
+const verifyRecruiterEmail = async (payload: IVerifyRecruiterEmailPayload) => {
+	const otp = payload.otp;
+	const email = payload.email.trim().toLowerCase();
+
+	const isUserExists = await prisma.user.findUnique({
+		where: { email },
+	});
+
+	if (isUserExists) {
+		throw new AppError(
+			httpStatus.CONFLICT,
+			"User with this email already exists",
+		);
+	}
+
+	const otpKey = `recruiter-registration-otp:${email}`;
+	const redisOTP = await redisClient.get(otpKey);
+
+	if (!redisOTP) {
+		throw new AppError(httpStatus.BAD_REQUEST, "Invalid or expired OTP");
+	}
+	if (redisOTP !== otp) {
+		throw new AppError(httpStatus.BAD_REQUEST, "OTP does not match");
+	}
+
+	await redisClient.del(otpKey);
+
+	const registrationKey = `recruiter-registration-data:${email}`;
+	const redisRegistrationData = await redisClient.get(registrationKey);
+
+	if (!redisRegistrationData) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"Registration session expired. Please apply again.",
+		);
+	}
+
+	const recruiterData = JSON.parse(redisRegistrationData);
+
+	// Generate a secure placeholder hash until admin approves and assigns the real auto-generated password
+	const temporaryPlaceholderHash = await bcrypt.hash(crypto.randomUUID(), 10);
+
+	// Create User with Recruiter Profile in PENDING status
+	const createdUser = await prisma.user.create({
+		data: {
+			email: recruiterData.email,
+			password: temporaryPlaceholderHash,
+			role: Role.RECRUITER,
+			status: UserStatus.PENDING,
+			authProvider: AuthProvider.CREDENTIALS,
+			emailVerified: true,
+			recruiterProfile: {
+				create: {
+					name: recruiterData.name,
+					companyName: recruiterData.companyName,
+					companyWebsite: recruiterData.companyWebsite || null,
+					designation: recruiterData.designation || null,
+					phone: recruiterData.phone || null,
+					isVerified: false,
+				},
+			},
+		},
+		include: {
+			recruiterProfile: true,
+		},
+	});
+
+	await redisClient.del(registrationKey);
+
+	return {
+		id: createdUser.id,
+		email: createdUser.email,
+		role: createdUser.role,
+		status: createdUser.status,
+		companyName: createdUser.recruiterProfile?.companyName,
+		message:
+			"Email verified successfully! Your application has been submitted and is currently pending admin review and approval.",
+	};
+};
+
 // 3. Login User
 const loginUser = async (payload: ILoginUserPayload) => {
 	const { password } = payload;
@@ -252,6 +410,13 @@ const loginUser = async (payload: ILoginUserPayload) => {
 
 	if (user.status === UserStatus.SUSPENDED) {
 		throw new AppError(httpStatus.FORBIDDEN, "Your account has been suspended");
+	}
+
+	if (user.status === UserStatus.PENDING) {
+		throw new AppError(
+			httpStatus.FORBIDDEN,
+			"Your recruiter account application is currently pending admin approval. You will receive an email once approved.",
+		);
 	}
 
 	if (user.isDeleted) {
@@ -748,6 +913,8 @@ const updateDeveloperProfile = async (
 export const AuthService = {
 	registerDeveloper,
 	verifyDeveloperEmail,
+	registerRecruiter,
+	verifyRecruiterEmail,
 	loginUser,
 	refreshToken,
 	googleCallback,

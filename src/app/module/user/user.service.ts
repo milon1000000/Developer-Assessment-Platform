@@ -1,12 +1,19 @@
 import httpStatus from "http-status";
+import bcrypt from "bcryptjs";
+import path from "path";
+import ejs from "ejs";
 import type { UploadApiResponse } from "cloudinary";
 import type { Prisma } from "../../../generated/prisma/client";
 import { Role, UserStatus } from "../../../generated/prisma/enums";
 import type { IQuery } from "../../interfaces";
+import config from "../../config";
 import { cloudinary } from "../../lib/cloudinary";
 import { prisma } from "../../lib/prisma";
+import { transporter } from "../../lib/nodemailer";
 import { AppError } from "../../utils/AppError";
+import { generateStrongPassword } from "../../utils/generatePassword";
 import type {
+	IRejectRecruiterPayload,
 	IUpdateAdminProfilePayload,
 	IUpdateRecruiterProfilePayload,
 } from "./user.interface";
@@ -374,6 +381,212 @@ const deleteUser = async (id: string) => {
 	return { message: "User deleted successfully" };
 };
 
+// Admin: Get all pending recruiter applications
+const getPendingRecruiterApplications = async (query: IQuery) => {
+	const limit = query.limit ? Number(query.limit) : 10;
+	const page = query.page ? Number(query.page) : 1;
+	const skip = (page - 1) * limit;
+
+	const andConditions: Prisma.UserWhereInput[] = [
+		{
+			isDeleted: false,
+			role: Role.RECRUITER,
+			status: UserStatus.PENDING,
+		},
+	];
+
+	if (query.searchTerm) {
+		andConditions.push({
+			OR: [
+				{ email: { contains: query.searchTerm, mode: "insensitive" } },
+				{
+					recruiterProfile: {
+						name: { contains: query.searchTerm, mode: "insensitive" },
+					},
+				},
+				{
+					recruiterProfile: {
+						companyName: {
+							contains: query.searchTerm,
+							mode: "insensitive",
+						},
+					},
+				},
+			],
+		});
+	}
+
+	const [applications, total] = await Promise.all([
+		prisma.user.findMany({
+			where: { AND: andConditions },
+			take: limit,
+			skip,
+			orderBy: { createdAt: "desc" },
+			include: {
+				recruiterProfile: true,
+			},
+		}),
+		prisma.user.count({
+			where: { AND: andConditions },
+		}),
+	]);
+
+	return {
+		meta: {
+			total,
+			page,
+			limit,
+			totalPages: Math.ceil(total / limit),
+		},
+		data: applications,
+	};
+};
+
+// Admin: Approve Recruiter Application & Send Auto-generated Password
+const approveRecruiterApplication = async (userId: string) => {
+	const user = await prisma.user.findUnique({
+		where: { id: userId, isDeleted: false, role: Role.RECRUITER },
+		include: {
+			recruiterProfile: true,
+		},
+	});
+
+	if (!user) {
+		throw new AppError(httpStatus.NOT_FOUND, "Recruiter application not found");
+	}
+
+	if (user.status === UserStatus.ACTIVE && user.recruiterProfile?.isVerified) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"Recruiter application has already been approved",
+		);
+	}
+
+	// Generate auto password meeting the required structure
+	const autoPassword = generateStrongPassword(12);
+
+	const hashedPassword = await bcrypt.hash(
+		autoPassword,
+		Number(config.bcrypt_salt_rounds),
+	);
+
+	// Update user in DB
+	const updatedUser = await prisma.user.update({
+		where: { id: userId },
+		data: {
+			status: UserStatus.ACTIVE,
+			password: hashedPassword,
+			recruiterProfile: {
+				update: {
+					isVerified: true,
+				},
+			},
+		},
+		include: {
+			recruiterProfile: true,
+		},
+	});
+
+	// Send approval email with login credentials
+	const templatePath = path.join(
+		process.cwd(),
+		"src/app/templates/recruiter-application-approved.ejs",
+	);
+
+	try {
+		const html = await ejs.renderFile(templatePath, {
+			name: updatedUser.recruiterProfile?.name || "Recruiter",
+			companyName: updatedUser.recruiterProfile?.companyName || "Your Company",
+			email: updatedUser.email,
+			password: autoPassword,
+			loginUrl: `${config.frontend_url}/login`,
+		});
+
+		await transporter.sendMail({
+			from: config.email_sender,
+			to: updatedUser.email,
+			subject: "Recruiter Account Approved - Developer Assessment Platform",
+			html,
+		});
+	} catch (mailError) {
+		console.error("Error sending recruiter approval email:", mailError);
+	}
+
+	return {
+		id: updatedUser.id,
+		email: updatedUser.email,
+		role: updatedUser.role,
+		status: updatedUser.status,
+		companyName: updatedUser.recruiterProfile?.companyName,
+		isVerified: updatedUser.recruiterProfile?.isVerified,
+		message:
+			"Recruiter application approved successfully. Credentials have been sent to their email.",
+	};
+};
+
+// Admin: Reject Recruiter Application
+const rejectRecruiterApplication = async (
+	userId: string,
+	payload: IRejectRecruiterPayload,
+) => {
+	const user = await prisma.user.findUnique({
+		where: { id: userId, isDeleted: false, role: Role.RECRUITER },
+		include: {
+			recruiterProfile: true,
+		},
+	});
+
+	if (!user) {
+		throw new AppError(httpStatus.NOT_FOUND, "Recruiter application not found");
+	}
+
+	const updatedUser = await prisma.user.update({
+		where: { id: userId },
+		data: {
+			status: UserStatus.SUSPENDED,
+			recruiterProfile: {
+				update: {
+					isVerified: false,
+				},
+			},
+		},
+		include: {
+			recruiterProfile: true,
+		},
+	});
+
+	const rejectionReason =
+		payload.rejectionReason ||
+		"Your application did not meet our verification criteria at this time.";
+
+	// Send rejection email
+	const templatePath = path.join(
+		process.cwd(),
+		"src/app/templates/recruiter-application-rejected.ejs",
+	);
+
+	try {
+		const html = await ejs.renderFile(templatePath, {
+			name: updatedUser.recruiterProfile?.name || "Applicant",
+			companyName: updatedUser.recruiterProfile?.companyName || "Your Company",
+			rejectionReason,
+		});
+
+		await transporter.sendMail({
+			from: config.email_sender,
+			to: updatedUser.email,
+			subject: "Application Update - Developer Assessment Platform",
+			html,
+		});
+	} catch (mailError) {
+		console.error("Error sending recruiter rejection email:", mailError);
+	}
+
+	return {
+		message: "Recruiter application rejected. Notification email sent.",
+	};
+};
+
 export const UserService = {
 	getRecruiterProfile,
 	updateRecruiterProfile,
@@ -383,4 +596,7 @@ export const UserService = {
 	getUserById,
 	changeUserStatus,
 	deleteUser,
+	getPendingRecruiterApplications,
+	approveRecruiterApplication,
+	rejectRecruiterApplication,
 };
