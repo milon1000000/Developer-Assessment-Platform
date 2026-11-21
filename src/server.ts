@@ -1,6 +1,6 @@
 import app from "./app";
 import config from "./app/config";
-// import { deleteUnverifiedDoctors } from "./app/lib/cron";
+import { initCronJobs } from "./app/lib/cron";
 import { transporter } from "./app/lib/nodemailer";
 import { prisma } from "./app/lib/prisma";
 import { redisClient } from "./app/lib/redis";
@@ -25,7 +25,8 @@ const main = async () => {
 		await seedTesterRecruiter();
 		await seedTesterDeveloper();
 
-		// await deleteUnverifiedDoctors();
+		// Initialize Background Cron Schedulers
+		initCronJobs();
 
 		await transporter.verify();
 		console.log("Nodemailer Connected Successfully.");
