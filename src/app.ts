@@ -23,6 +23,7 @@ import { GlobalQuestionRoutes } from "./app/module/globalQuestion/globalQuestion
 import { SubmissionRoutes } from "./app/module/submissions/submission.route";
 import { UserRoutes } from "./app/module/user/user.route";
 import { DashboardRoutes } from "./app/module/dashboard/dashboard.route";
+import { AuditLogRoutes } from "./app/module/auditLog/auditLog.route";
 
 const app: Application = express();
 
@@ -49,6 +50,7 @@ app.use("/api/v1/global-questions", GlobalQuestionRoutes);
 
 app.use("/api/v1/user", UserRoutes);
 app.use("/api/v1/dashboard", DashboardRoutes);
+app.use("/api/v1/audit-logs", AuditLogRoutes);
 
 app.get("/test", async (req: Request, res: Response, next: NextFunction) => {
 	try {

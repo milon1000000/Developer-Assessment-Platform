@@ -88,7 +88,11 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
 
 const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id as string;
-	const result = await UserService.changeUserStatus(id, req.body.status);
+	const result = await UserService.changeUserStatus(
+		id,
+		req.body.status,
+		req.user?.userId,
+	);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
@@ -100,7 +104,7 @@ const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
 
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id as string;
-	const result = await UserService.deleteUser(id);
+	const result = await UserService.deleteUser(id, req.user?.userId);
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
@@ -128,7 +132,10 @@ const getPendingRecruiterApplications = catchAsync(
 const approveRecruiterApplication = catchAsync(
 	async (req: Request, res: Response) => {
 		const id = req.params.id as string;
-		const result = await UserService.approveRecruiterApplication(id);
+		const result = await UserService.approveRecruiterApplication(
+			id,
+			req.user?.userId,
+		);
 
 		sendResponse(res, {
 			statusCode: httpStatus.OK,
@@ -142,7 +149,11 @@ const approveRecruiterApplication = catchAsync(
 const rejectRecruiterApplication = catchAsync(
 	async (req: Request, res: Response) => {
 		const id = req.params.id as string;
-		const result = await UserService.rejectRecruiterApplication(id, req.body);
+		const result = await UserService.rejectRecruiterApplication(
+			id,
+			req.body,
+			req.user?.userId,
+		);
 
 		sendResponse(res, {
 			statusCode: httpStatus.OK,

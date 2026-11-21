@@ -8,6 +8,7 @@ import {
 import type { IQuery } from "../../interfaces";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
+import { AuditLogService } from "../auditLog/auditLog.service";
 import type {
 	IAddQuestionsToAssessmentPayload,
 	IAssessmentQuestionItem,
@@ -435,6 +436,18 @@ const deleteAssessment = async (
 		data: {
 			isDeleted: true,
 			isActive: false,
+		},
+	});
+
+	// Record audit log for assessment deletion
+	await AuditLogService.createAuditLog({
+		userId: user.userId,
+		action: "ASSESSMENT_DELETED",
+		entity: "Assessment",
+		entityId: id,
+		metadata: {
+			title: assessment.title,
+			deletedByRole: user.role,
 		},
 	});
 

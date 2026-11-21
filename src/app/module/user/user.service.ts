@@ -12,6 +12,7 @@ import { prisma } from "../../lib/prisma";
 import { transporter } from "../../lib/nodemailer";
 import { AppError } from "../../utils/AppError";
 import { generateStrongPassword } from "../../utils/generatePassword";
+import { AuditLogService } from "../auditLog/auditLog.service";
 import type {
 	IRejectRecruiterPayload,
 	IUpdateAdminProfilePayload,
@@ -336,7 +337,11 @@ const getUserById = async (id: string) => {
 	return user;
 };
 
-const changeUserStatus = async (id: string, status: UserStatus) => {
+const changeUserStatus = async (
+	id: string,
+	status: UserStatus,
+	adminId?: string,
+) => {
 	const user = await prisma.user.findUnique({
 		where: { id, isDeleted: false },
 	});
@@ -357,10 +362,26 @@ const changeUserStatus = async (id: string, status: UserStatus) => {
 		},
 	});
 
+	// Record audit log for status change
+	await AuditLogService.createAuditLog({
+		userId: adminId,
+		action:
+			status === UserStatus.SUSPENDED
+				? "USER_SUSPENDED"
+				: "USER_STATUS_CHANGED",
+		entity: "User",
+		entityId: id,
+		metadata: {
+			targetUserEmail: user.email,
+			oldStatus: user.status,
+			newStatus: status,
+		},
+	});
+
 	return updated;
 };
 
-const deleteUser = async (id: string) => {
+const deleteUser = async (id: string, adminId?: string) => {
 	const user = await prisma.user.findUnique({
 		where: { id, isDeleted: false },
 	});
@@ -375,6 +396,18 @@ const deleteUser = async (id: string) => {
 			isDeleted: true,
 			status: UserStatus.SUSPENDED,
 			deletedAt: new Date(),
+		},
+	});
+
+	// Record audit log for soft delete
+	await AuditLogService.createAuditLog({
+		userId: adminId,
+		action: "USER_DELETED",
+		entity: "User",
+		entityId: id,
+		metadata: {
+			targetUserEmail: user.email,
+			role: user.role,
 		},
 	});
 
@@ -443,7 +476,10 @@ const getPendingRecruiterApplications = async (query: IQuery) => {
 };
 
 // Admin: Approve Recruiter Application & Send Auto-generated Password
-const approveRecruiterApplication = async (userId: string) => {
+const approveRecruiterApplication = async (
+	userId: string,
+	adminId?: string,
+) => {
 	const user = await prisma.user.findUnique({
 		where: { id: userId, isDeleted: false, role: Role.RECRUITER },
 		include: {
@@ -484,6 +520,18 @@ const approveRecruiterApplication = async (userId: string) => {
 		},
 		include: {
 			recruiterProfile: true,
+		},
+	});
+
+	// Record audit log for recruiter approval
+	await AuditLogService.createAuditLog({
+		userId: adminId,
+		action: "RECRUITER_APPROVED",
+		entity: "Recruiter",
+		entityId: userId,
+		metadata: {
+			targetEmail: updatedUser.email,
+			companyName: updatedUser.recruiterProfile?.companyName,
 		},
 	});
 
@@ -528,6 +576,7 @@ const approveRecruiterApplication = async (userId: string) => {
 const rejectRecruiterApplication = async (
 	userId: string,
 	payload: IRejectRecruiterPayload,
+	adminId?: string,
 ) => {
 	const user = await prisma.user.findUnique({
 		where: { id: userId, isDeleted: false, role: Role.RECRUITER },
@@ -558,6 +607,19 @@ const rejectRecruiterApplication = async (
 	const rejectionReason =
 		payload.rejectionReason ||
 		"Your application did not meet our verification criteria at this time.";
+
+	// Record audit log for recruiter rejection
+	await AuditLogService.createAuditLog({
+		userId: adminId,
+		action: "RECRUITER_REJECTED",
+		entity: "Recruiter",
+		entityId: userId,
+		metadata: {
+			targetEmail: updatedUser.email,
+			companyName: updatedUser.recruiterProfile?.companyName,
+			rejectionReason,
+		},
+	});
 
 	// Send rejection email
 	const templatePath = path.join(
