@@ -23,6 +23,14 @@ router.post(
 	SubmissionController.saveAnswer,
 );
 
+// Developer executes code against sample test cases in sandbox
+router.post(
+	"/:id/run-code",
+	auth(Role.DEVELOPER, Role.ADMIN),
+	validateRequest(SubmissionValidation.RunCodeZodSchema),
+	SubmissionController.runCode,
+);
+
 // Developer records a proctoring event (e.g. tab switch, copy paste)
 router.post(
 	"/:id/proctor-event",

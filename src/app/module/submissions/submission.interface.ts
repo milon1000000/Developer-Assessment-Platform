@@ -18,6 +18,12 @@ export interface ISubmitAnswerPayload {
 	totalTestCases?: number;
 }
 
+export interface IRunCodePayload {
+	questionId: string;
+	code: string;
+	language?: string;
+}
+
 export interface IProctorEventPayload {
 	eventType: ProctorEventType;
 	details?: any;

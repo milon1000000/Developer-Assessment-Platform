@@ -8,11 +8,13 @@ import {
 	SubmissionStatus,
 } from "../../../generated/prisma/enums";
 import type { IQuery } from "../../interfaces";
+import { executeCodeSuite, type ITestCaseItem } from "../../lib/codeRunner";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../utils/AppError";
 import type {
 	IProctorEventPayload,
 	IReviewSubmissionPayload,
+	IRunCodePayload,
 	IStartAssessmentPayload,
 	ISubmitAnswerPayload,
 } from "./submission.interface";
@@ -285,6 +287,120 @@ const saveAnswer = async (
 	return answer;
 };
 
+// Run code against sample/public test cases in sandbox
+const runCode = async (
+	submissionId: string,
+	payload: IRunCodePayload,
+	userId: string,
+) => {
+	const submission = await prisma.submission.findUnique({
+		where: { id: submissionId },
+		include: {
+			developer: true,
+			assessment: {
+				include: {
+					questions: true,
+				},
+			},
+		},
+	});
+
+	if (!submission) {
+		throw new AppError(httpStatus.NOT_FOUND, "Submission not found");
+	}
+
+	if (submission.developer.userId !== userId) {
+		throw new AppError(
+			httpStatus.FORBIDDEN,
+			"You can only run code in your own active assessment session",
+		);
+	}
+
+	if (submission.status !== SubmissionStatus.IN_PROGRESS) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			`Cannot run code. Submission status is already ${submission.status}`,
+		);
+	}
+
+	// Verify time limit
+	const elapsedMinutes =
+		(new Date().getTime() - new Date(submission.startedAt).getTime()) /
+		(1000 * 60);
+
+	if (elapsedMinutes > submission.assessment.durationMinutes + 2) {
+		await prisma.submission.update({
+			where: { id: submission.id },
+			data: { status: SubmissionStatus.EXPIRED },
+		});
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"Assessment duration has expired",
+		);
+	}
+
+	const question = submission.assessment.questions.find(
+		(q) => q.id === payload.questionId,
+	);
+
+	if (!question) {
+		throw new AppError(
+			httpStatus.NOT_FOUND,
+			"Question not found in this assessment",
+		);
+	}
+
+	if (question.type !== QuestionType.CODING) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"Run code is only available for coding questions",
+		);
+	}
+
+	// Live trial run only uses non-hidden (sample/public) test cases
+	const allTestCases = Array.isArray(question.testCases)
+		? (question.testCases as unknown as ITestCaseItem[])
+		: [];
+
+	const publicTestCases = allTestCases.filter((tc) => !tc.isHidden);
+	const testCasesToRun =
+		publicTestCases.length > 0 ? publicTestCases : allTestCases.slice(0, 2);
+
+	const executionSummary = executeCodeSuite(
+		payload.code,
+		testCasesToRun,
+		payload.language || "javascript",
+	);
+
+	// Auto-save the candidate's code draft and execution summary in the Answer table
+	await prisma.answer.upsert({
+		where: {
+			submissionId_questionId: {
+				submissionId,
+				questionId: payload.questionId,
+			},
+		},
+		update: {
+			code: payload.code,
+			language: payload.language || "javascript",
+			passedTestCases: executionSummary.passedTestCases,
+			totalTestCases: executionSummary.totalTestCases,
+			executionDetails: executionSummary as any,
+		},
+		create: {
+			submissionId,
+			questionId: payload.questionId,
+			code: payload.code,
+			language: payload.language || "javascript",
+			passedTestCases: executionSummary.passedTestCases,
+			totalTestCases: executionSummary.totalTestCases,
+			executionDetails: executionSummary as any,
+		},
+	});
+
+	return executionSummary;
+};
+
 const recordProctorEvent = async (
 	submissionId: string,
 	payload: IProctorEventPayload,
@@ -424,23 +540,60 @@ const submitExam = async (submissionId: string, userId: string) => {
 					q.correctOption.trim().toLowerCase();
 				score = isCorrect ? q.points || 10 : 0;
 			}
+			if (ans) {
+				await prisma.answer.update({
+					where: { id: ans.id },
+					data: {
+						scoreEarned: score,
+					},
+				});
+			}
 		} else if (q.type === QuestionType.CODING) {
-			// Basic coding evaluation: if candidate provided non-empty code
-			if (ans?.code && ans.code.trim().length > 10) {
-				score = q.points || 10;
+			let passedTestCases = 0;
+			let totalTestCases = 0;
+			let executionDetails: any = null;
+
+			if (ans?.code && ans.code.trim().length > 0) {
+				const allTestCases = Array.isArray(q.testCases)
+					? (q.testCases as unknown as ITestCaseItem[])
+					: [];
+
+				if (allTestCases.length > 0) {
+					const suiteResult = executeCodeSuite(
+						ans.code,
+						allTestCases,
+						ans.language || "javascript",
+					);
+					passedTestCases = suiteResult.passedTestCases;
+					totalTestCases = suiteResult.totalTestCases;
+					executionDetails = suiteResult;
+
+					const maxQuestionPoints = q.points || 10;
+					score =
+						totalTestCases > 0
+							? Math.round(
+									(passedTestCases / totalTestCases) * maxQuestionPoints * 100,
+								) / 100
+							: maxQuestionPoints;
+				} else {
+					score = ans.code.trim().length > 10 ? q.points || 10 : 0;
+				}
+			}
+
+			if (ans) {
+				await prisma.answer.update({
+					where: { id: ans.id },
+					data: {
+						scoreEarned: score,
+						passedTestCases,
+						totalTestCases,
+						executionDetails,
+					},
+				});
 			}
 		}
 
 		totalScore += score;
-
-		if (ans) {
-			await prisma.answer.update({
-				where: { id: ans.id },
-				data: {
-					scoreEarned: score,
-				},
-			});
-		}
 	}
 
 	const maxScore =
@@ -773,6 +926,7 @@ const reviewSubmission = async (
 export const SubmissionService = {
 	startAssessment,
 	saveAnswer,
+	runCode,
 	recordProctorEvent,
 	submitExam,
 	getMySubmissions,

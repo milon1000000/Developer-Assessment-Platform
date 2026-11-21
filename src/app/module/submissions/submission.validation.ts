@@ -34,9 +34,16 @@ const ReviewSubmissionZodSchema = z.object({
 	totalScore: z.number().min(0).optional(),
 });
 
+const RunCodeZodSchema = z.object({
+	questionId: z.string().min(1, "Question ID is required"),
+	code: z.string().min(1, "Code is required"),
+	language: z.string().optional(),
+});
+
 export const SubmissionValidation = {
 	StartAssessmentZodSchema,
 	SubmitAnswerZodSchema,
+	RunCodeZodSchema,
 	ProctorEventZodSchema,
 	ReviewSubmissionZodSchema,
 };

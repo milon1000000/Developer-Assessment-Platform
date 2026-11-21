@@ -47,6 +47,23 @@ const saveAnswer = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const runCode = catchAsync(async (req: Request, res: Response) => {
+	const submissionId = req.params.id as string;
+	const userId = req.user!.userId;
+	const result = await SubmissionService.runCode(
+		submissionId,
+		req.body,
+		userId,
+	);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Code executed successfully",
+		data: result,
+	});
+});
+
 const recordProctorEvent = catchAsync(async (req: Request, res: Response) => {
 	const submissionId = req.params.id as string;
 	const userId = req.user!.userId;
@@ -143,6 +160,7 @@ const reviewSubmission = catchAsync(async (req: Request, res: Response) => {
 export const SubmissionController = {
 	startAssessment,
 	saveAnswer,
+	runCode,
 	recordProctorEvent,
 	submitExam,
 	getMySubmissions,
