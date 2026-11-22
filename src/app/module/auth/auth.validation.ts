@@ -101,7 +101,7 @@ const VerifyRecruiterEmailZodSchema = z.object({
 });
 
 const ChangePasswordZodSchema = z.object({
-	oldPassword: z.string().optional(),
+	oldPassword: z.string().optional().nullable(),
 	newPassword: z
 		.string()
 		.min(8, "Password must be at least 8 characters long")
