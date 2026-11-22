@@ -134,15 +134,30 @@ const getAllGlobalQuestions = async (query: IQuery) => {
 		});
 	}
 
-	// Filtering by tags
+	// Filtering by tags (Case-insensitive matching)
 	if (query.tags) {
-		const tagsList = Array.isArray(query.tags)
+		const rawTags = Array.isArray(query.tags)
 			? (query.tags as string[])
 			: typeof query.tags === "string"
 				? query.tags.split(",").map((t: string) => t.trim())
 				: [query.tags as string];
+
+		const tagsList = rawTags.filter(Boolean);
+
+		const expandedTags = Array.from(
+			new Set(
+				tagsList.flatMap((t) => [
+					t,
+					t.toLowerCase(),
+					t.toUpperCase(),
+					t.charAt(0).toUpperCase() + t.slice(1).toLowerCase(),
+					t.charAt(0).toLowerCase() + t.slice(1),
+				]),
+			),
+		);
+
 		andConditions.push({
-			tags: { hasSome: tagsList },
+			tags: { hasSome: expandedTags },
 		});
 	}
 
