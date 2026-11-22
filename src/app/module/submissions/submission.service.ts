@@ -19,17 +19,31 @@ import type {
 	ISubmitAnswerPayload,
 } from "./submission.interface";
 
-// Helper: Get or gracefully auto-create developer profile
+// Helper: Get or gracefully auto-create developer profile (only for DEVELOPER role)
 const getOrCreateDeveloper = async (userId: string, name: string) => {
-	let developer = await prisma.developer.findUnique({
-		where: { userId },
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		include: { developerProfile: true },
 	});
+
+	if (!user) {
+		throw new AppError(httpStatus.NOT_FOUND, "User not found");
+	}
+
+	if (user.role !== Role.DEVELOPER) {
+		throw new AppError(
+			httpStatus.FORBIDDEN,
+			"Only users with DEVELOPER role can participate in assessments or submit code",
+		);
+	}
+
+	let developer = user.developerProfile;
 
 	if (!developer) {
 		developer = await prisma.developer.create({
 			data: {
-				userId,
-				name: name || "Developer",
+				userId: user.id,
+				name: name || user.email.split("@")[0],
 			},
 		});
 	}

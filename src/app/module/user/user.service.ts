@@ -75,7 +75,7 @@ const updateRecruiterProfile = async (
 		throw new AppError(httpStatus.NOT_FOUND, "User not found");
 	}
 
-	if (user.role !== Role.RECRUITER && user.role !== Role.ADMIN) {
+	if (user.role !== Role.RECRUITER) {
 		throw new AppError(
 			httpStatus.FORBIDDEN,
 			"Only recruiters can update this profile",

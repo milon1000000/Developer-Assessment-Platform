@@ -7,6 +7,9 @@ import passport from "passport";
 import config from "../../config";
 import { AppError } from "../../utils/AppError";
 
+import { Role } from "../../../generated/prisma/enums";
+import { UserService } from "../user/user.service";
+
 const registerDeveloper = catchAsync(async (req: Request, res: Response) => {
 	const payload = req.body;
 
@@ -263,20 +266,38 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
 	const userId = req.user?.userId;
+	const role = req.user?.role;
 	if (!userId) {
 		throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized access");
 	}
 
-	const result = await AuthService.updateDeveloperProfile(
-		userId,
-		req.body,
-		req.file,
-	);
+	let result: unknown;
+	if (role === Role.DEVELOPER) {
+		result = await AuthService.updateDeveloperProfile(
+			userId,
+			req.body,
+			req.file,
+		);
+	} else if (role === Role.RECRUITER) {
+		result = await UserService.updateRecruiterProfile(
+			userId,
+			req.body,
+			req.file,
+		);
+	} else if (role === Role.ADMIN) {
+		result = await UserService.updateAdminProfile(
+			userId,
+			req.body,
+			req.file,
+		);
+	} else {
+		throw new AppError(httpStatus.FORBIDDEN, "Invalid role for profile update");
+	}
 
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
 		success: true,
-		message: "Developer profile updated successfully",
+		message: "Profile updated successfully",
 		data: result,
 	});
 });

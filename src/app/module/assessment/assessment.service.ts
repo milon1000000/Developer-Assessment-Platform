@@ -16,7 +16,7 @@ import type {
 	IUpdateAssessmentPayload,
 } from "./assessment.interface";
 
-// Helper: Get or gracefully auto-create recruiter profile for authenticated recruiter/admin
+// Helper: Get or gracefully auto-create recruiter profile for authenticated recruiter
 const getOrCreateRecruiter = async (userId: string) => {
 	let recruiter = await prisma.recruiter.findUnique({
 		where: { userId },
@@ -27,7 +27,7 @@ const getOrCreateRecruiter = async (userId: string) => {
 			where: { id: userId },
 		});
 
-		if (user && (user.role === Role.RECRUITER || user.role === Role.ADMIN)) {
+		if (user && user.role === Role.RECRUITER) {
 			recruiter = await prisma.recruiter.create({
 				data: {
 					userId: user.id,
@@ -37,7 +37,10 @@ const getOrCreateRecruiter = async (userId: string) => {
 				},
 			});
 		} else {
-			throw new AppError(httpStatus.NOT_FOUND, "Recruiter profile not found");
+			throw new AppError(
+				httpStatus.FORBIDDEN,
+				"Only users with RECRUITER role can create or manage their recruiter profile",
+			);
 		}
 	}
 

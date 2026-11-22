@@ -3,10 +3,15 @@ import { Role } from "../../../generated/prisma/enums";
 import { upload } from "../../lib/multer";
 import { auth } from "../../middleware/checkAuth";
 import { validateRequest } from "../../middleware/validateRequest";
+import { AuthController } from "../auth/auth.controller";
 import { UserController } from "./user.controller";
 import { UserValidation } from "./user.validation";
 
 const router = Router();
+
+// Current user profile aliases (/user/me & /user/update-profile)
+router.get("/me", auth(), AuthController.getMe);
+router.patch("/update-profile", auth(), upload.single("image"), AuthController.updateProfile);
 
 // Recruiter profile endpoints
 router.get(

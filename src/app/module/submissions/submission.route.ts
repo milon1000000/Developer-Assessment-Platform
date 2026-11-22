@@ -10,7 +10,7 @@ const router = Router();
 // Developer starts or resumes an assessment session
 router.post(
 	"/start",
-	auth(Role.DEVELOPER, Role.ADMIN),
+	auth(Role.DEVELOPER),
 	validateRequest(SubmissionValidation.StartAssessmentZodSchema),
 	SubmissionController.startAssessment,
 );
@@ -18,7 +18,7 @@ router.post(
 // Developer saves/updates an answer for a specific question (Draft or intermediate submission)
 router.post(
 	"/:id/answer",
-	auth(Role.DEVELOPER, Role.ADMIN),
+	auth(Role.DEVELOPER),
 	validateRequest(SubmissionValidation.SubmitAnswerZodSchema),
 	SubmissionController.saveAnswer,
 );
@@ -26,7 +26,7 @@ router.post(
 // Developer executes code against sample test cases in sandbox
 router.post(
 	"/:id/run-code",
-	auth(Role.DEVELOPER, Role.ADMIN),
+	auth(Role.DEVELOPER),
 	validateRequest(SubmissionValidation.RunCodeZodSchema),
 	SubmissionController.runCode,
 );
@@ -34,7 +34,7 @@ router.post(
 // Developer records a proctoring event (e.g. tab switch, copy paste)
 router.post(
 	"/:id/proctor-event",
-	auth(Role.DEVELOPER, Role.ADMIN),
+	auth(Role.DEVELOPER),
 	validateRequest(SubmissionValidation.ProctorEventZodSchema),
 	SubmissionController.recordProctorEvent,
 );
@@ -42,14 +42,14 @@ router.post(
 // Developer finalizes and submits exam (triggers automated grading)
 router.post(
 	"/:id/submit",
-	auth(Role.DEVELOPER, Role.ADMIN),
+	auth(Role.DEVELOPER),
 	SubmissionController.submitExam,
 );
 
 // Developer views all their past and ongoing submissions
 router.get(
 	"/my-submissions",
-	auth(Role.DEVELOPER, Role.ADMIN),
+	auth(Role.DEVELOPER),
 	SubmissionController.getMySubmissions,
 );
 
