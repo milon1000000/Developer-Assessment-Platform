@@ -482,6 +482,7 @@ const loginUser = async (payload: ILoginUserPayload) => {
 			role: user.role,
 			status: user.status,
 			authProvider: user.authProvider,
+			hasPassword: Boolean(user.password),
 			emailVerified: user.emailVerified,
 			createdAt: user.createdAt,
 			updatedAt: user.updatedAt,
@@ -774,37 +775,29 @@ const changePassword = async (
 		throw new AppError(httpStatus.FORBIDDEN, "Your account has been suspended");
 	}
 
-	if (
-		user.googleId &&
-		!user.password &&
-		user.authProvider === AuthProvider.GOOGLE
-	) {
-		throw new AppError(
-			httpStatus.BAD_REQUEST,
-			"This account was registered using Google. Password change is not supported.",
-		);
-	}
+	// If user already has a password, verify old password
+	if (user.password) {
+		if (!oldPassword) {
+			throw new AppError(
+				httpStatus.BAD_REQUEST,
+				"Current password is required to change your password",
+			);
+		}
 
-	if (!user.password) {
-		throw new AppError(
-			httpStatus.BAD_REQUEST,
-			"No password set for this account.",
-		);
-	}
+		const isPasswordMatched = await bcrypt.compare(oldPassword, user.password);
+		if (!isPasswordMatched) {
+			throw new AppError(
+				httpStatus.BAD_REQUEST,
+				"Current/old password does not match",
+			);
+		}
 
-	const isPasswordMatched = await bcrypt.compare(oldPassword, user.password);
-	if (!isPasswordMatched) {
-		throw new AppError(
-			httpStatus.BAD_REQUEST,
-			"Current/old password does not match",
-		);
-	}
-
-	if (oldPassword === newPassword) {
-		throw new AppError(
-			httpStatus.BAD_REQUEST,
-			"New password cannot be the same as your old password",
-		);
+		if (oldPassword === newPassword) {
+			throw new AppError(
+				httpStatus.BAD_REQUEST,
+				"New password cannot be the same as your old password",
+			);
+		}
 	}
 
 	const hashedPassword = await bcrypt.hash(
@@ -820,7 +813,9 @@ const changePassword = async (
 	});
 
 	return {
-		message: "Password changed successfully",
+		message: user.password
+			? "Password changed successfully"
+			: "Password set successfully. You can now log in with either Google or email and password.",
 	};
 };
 
@@ -857,6 +852,7 @@ const getMe = async (userId: string) => {
 			role: user.role,
 			status: user.status,
 			authProvider: user.authProvider,
+			hasPassword: Boolean(user.password),
 			emailVerified: user.emailVerified,
 			createdAt: user.createdAt,
 			updatedAt: user.updatedAt,

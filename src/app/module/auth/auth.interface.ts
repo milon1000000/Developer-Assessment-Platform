@@ -62,6 +62,6 @@ export interface IResetPasswordPayload {
 }
 
 export interface IChangePasswordPayload {
-	oldPassword: string;
+	oldPassword?: string;
 	newPassword: string;
 }
