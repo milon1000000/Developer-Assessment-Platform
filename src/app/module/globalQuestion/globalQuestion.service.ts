@@ -24,6 +24,28 @@ const generateSlug = (title: string): string => {
 	return `${cleanTitle}-${uniqueId}`;
 };
 
+const normalizeTags = (rawTags?: string[] | string): string[] => {
+	if (!rawTags) return [];
+	const list = Array.isArray(rawTags) ? rawTags : [rawTags];
+	const cleaned: string[] = [];
+	list.forEach((item) => {
+		if (typeof item === "string") {
+			item
+				.split(/[,;]+/)
+				.map((t) => t.trim().replace(/^#+/, ""))
+				.filter(Boolean)
+				.forEach((clean) => {
+					if (
+						!cleaned.some((c) => c.toLowerCase() === clean.toLowerCase())
+					) {
+						cleaned.push(clean);
+					}
+				});
+		}
+	});
+	return cleaned;
+};
+
 const createGlobalQuestion = async (
 	payload: ICreateGlobalQuestionPayload,
 	adminUserId: string,
@@ -57,7 +79,7 @@ const createGlobalQuestion = async (
 			slug,
 			type: payload.type || QuestionType.CODING,
 			difficulty: payload.difficulty || Difficulty.EASY,
-			tags: payload.tags || [],
+			tags: normalizeTags(payload.tags),
 			problemStatement: payload.problemStatement,
 			constraints: payload.constraints || null,
 			starterCode: payload.starterCode || undefined,
@@ -249,6 +271,10 @@ const updateGlobalQuestion = async (
 	}
 
 	const updateData: any = { ...payload };
+
+	if (payload.tags) {
+		updateData.tags = normalizeTags(payload.tags);
+	}
 
 	if (payload.title && payload.title !== isQuestionExist.title) {
 		updateData.slug = generateSlug(payload.title);
