@@ -17,10 +17,22 @@ export const seedTesterAdmin = async () => {
 
 		const isTesterAdminExist = await prisma.user.findUnique({
 			where: { email },
+			include: { adminProfile: true },
 		});
 
 		if (isTesterAdminExist) {
-			console.log("Tester Admin Already Exists!");
+			if (
+				isTesterAdminExist.adminProfile &&
+				isTesterAdminExist.adminProfile.name !== name
+			) {
+				await prisma.admin.update({
+					where: { id: isTesterAdminExist.adminProfile.id },
+					data: { name },
+				});
+				console.log("Tester Admin Name Updated to:", name);
+			} else {
+				console.log("Tester Admin Already Exists!");
+			}
 			return;
 		}
 
@@ -68,10 +80,22 @@ export const seedTesterRecruiter = async () => {
 
 		const isTesterRecruiterExist = await prisma.user.findUnique({
 			where: { email },
+			include: { recruiterProfile: true },
 		});
 
 		if (isTesterRecruiterExist) {
-			console.log("Tester Recruiter Already Exists!");
+			if (
+				isTesterRecruiterExist.recruiterProfile &&
+				isTesterRecruiterExist.recruiterProfile.name !== name
+			) {
+				await prisma.recruiter.update({
+					where: { id: isTesterRecruiterExist.recruiterProfile.id },
+					data: { name },
+				});
+				console.log("Tester Recruiter Name Updated to:", name);
+			} else {
+				console.log("Tester Recruiter Already Exists!");
+			}
 			return;
 		}
 
@@ -119,10 +143,22 @@ export const seedTesterDeveloper = async () => {
 
 		const isTesterDeveloperExist = await prisma.user.findUnique({
 			where: { email },
+			include: { developerProfile: true },
 		});
 
 		if (isTesterDeveloperExist) {
-			console.log("Tester Developer Already Exists!");
+			if (
+				isTesterDeveloperExist.developerProfile &&
+				isTesterDeveloperExist.developerProfile.name !== name
+			) {
+				await prisma.developer.update({
+					where: { id: isTesterDeveloperExist.developerProfile.id },
+					data: { name },
+				});
+				console.log("Tester Developer Name Updated to:", name);
+			} else {
+				console.log("Tester Developer Already Exists!");
+			}
 			return;
 		}
 
