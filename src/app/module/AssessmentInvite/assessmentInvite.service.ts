@@ -188,6 +188,100 @@ const getInvitesByAssessmentId = async (
 			take: limit,
 			skip: skip,
 			orderBy: { [sortBy]: sortOrder },
+			include: {
+				assessment: {
+					select: {
+						id: true,
+						title: true,
+						durationMinutes: true,
+						passingScore: true,
+						maxTabSwitches: true,
+					},
+				},
+			},
+		}),
+		prisma.assessmentInvite.count({ where: { AND: andConditions } }),
+	]);
+
+	return {
+		data: invites,
+		meta: {
+			page,
+			limit,
+			total,
+			totalPages: Math.ceil(total / limit),
+		},
+	};
+};
+
+const getAllInvites = async (
+	query: IQuery,
+	user: { userId: string; role: Role },
+) => {
+	const limit = query.limit ? Number(query.limit) : 10;
+	const page = query.page ? Number(query.page) : 1;
+	const skip = (page - 1) * limit;
+	const sortBy = query.sortBy ? query.sortBy : "sentAt";
+	const sortOrder =
+		(query.sortOrder || "desc").toLowerCase() === "asc" ? "asc" : "desc";
+
+	const andConditions: Prisma.AssessmentInviteWhereInput[] = [];
+
+	if (user.role === Role.RECRUITER) {
+		andConditions.push({
+			assessment: {
+				recruiter: { userId: user.userId },
+				isDeleted: false,
+			},
+		});
+	} else if (query.recruiterId) {
+		andConditions.push({
+			assessment: {
+				recruiterId: query.recruiterId as string,
+				isDeleted: false,
+			},
+		});
+	}
+
+	if (query.assessmentId) {
+		andConditions.push({ assessmentId: query.assessmentId as string });
+	}
+
+	if (query.status) {
+		andConditions.push({ status: query.status as InviteStatus });
+	}
+
+	const searchTerm = query.searchTerm || query.search;
+	if (searchTerm) {
+		andConditions.push({
+			OR: [
+				{ email: { contains: searchTerm as string, mode: "insensitive" } },
+				{
+					assessment: {
+						title: { contains: searchTerm as string, mode: "insensitive" },
+					},
+				},
+			],
+		});
+	}
+
+	const [invites, total] = await Promise.all([
+		prisma.assessmentInvite.findMany({
+			where: { AND: andConditions },
+			take: limit,
+			skip: skip,
+			orderBy: { [sortBy]: sortOrder },
+			include: {
+				assessment: {
+					select: {
+						id: true,
+						title: true,
+						durationMinutes: true,
+						passingScore: true,
+						maxTabSwitches: true,
+					},
+				},
+			},
 		}),
 		prisma.assessmentInvite.count({ where: { AND: andConditions } }),
 	]);
@@ -381,6 +475,7 @@ const deleteAssessmentInvite = async (
 
 export const AssessmentInviteService = {
 	sendAssessmentInvites,
+	getAllInvites,
 	getInvitesByAssessmentId,
 	verifyInviteToken,
 	resendAssessmentInvite,

@@ -15,6 +15,13 @@ router.post(
 	AssessmentInviteController.sendAssessmentInvites,
 );
 
+// Get all invitations across assessments (Recruiter gets their own; Admin sees all)
+router.get(
+	"/",
+	auth(Role.RECRUITER, Role.ADMIN),
+	AssessmentInviteController.getAllInvites,
+);
+
 // Get all invitations for a specific assessment
 router.get(
 	"/assessment/:assessmentId",

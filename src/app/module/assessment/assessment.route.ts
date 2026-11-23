@@ -10,7 +10,7 @@ const router = Router();
 // Create new assessment (Recruiter / Admin)
 router.post(
 	"/",
-	auth(Role.RECRUITER, Role.ADMIN),
+	auth(Role.RECRUITER),
 	validateRequest(AssessmentValidation.CreateAssessmentZodSchema),
 	AssessmentController.createAssessment,
 );

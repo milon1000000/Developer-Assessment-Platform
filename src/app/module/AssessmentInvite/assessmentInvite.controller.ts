@@ -21,6 +21,19 @@ const sendAssessmentInvites = catchAsync(
 	},
 );
 
+const getAllInvites = catchAsync(async (req: Request, res: Response) => {
+	const user = { userId: req.user!.userId, role: req.user!.role };
+	const result = await AssessmentInviteService.getAllInvites(req.query, user);
+
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Assessment invitations retrieved successfully",
+		meta: result.meta,
+		data: result.data,
+	});
+});
+
 const getInvitesByAssessmentId = catchAsync(
 	async (req: Request, res: Response) => {
 		const assessmentId = req.params.assessmentId as string;
@@ -91,6 +104,7 @@ const deleteAssessmentInvite = catchAsync(
 
 export const AssessmentInviteController = {
 	sendAssessmentInvites,
+	getAllInvites,
 	getInvitesByAssessmentId,
 	verifyInviteToken,
 	resendAssessmentInvite,
